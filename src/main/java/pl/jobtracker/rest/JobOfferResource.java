@@ -10,6 +10,13 @@ import jakarta.ws.rs.core.MediaType;
 import pl.jobtracker.dto.JobOfferResponse;
 import pl.jobtracker.entity.JobOffer;
 
+import jakarta.transaction.Transactional;
+import jakarta.ws.rs.Consumes;
+import jakarta.ws.rs.POST;
+import jakarta.ws.rs.core.Response;
+import pl.jobtracker.dto.CreateJobOfferRequest;
+import pl.jobtracker.entity.Company;
+
 import java.util.List;
 
 @Path("/offers")
@@ -47,4 +54,83 @@ public class JobOfferResource {
                 ))
                 .toList();
     }
+
+    @POST
+    @Consumes(MediaType.APPLICATION_JSON)
+    @Transactional
+    public Response createOffer(CreateJobOfferRequest request) {
+
+        if (request == null ||
+                request.companyId() == null ||
+                request.positionTitle() == null ||
+                request.positionTitle().isBlank() ||
+                request.sourceType() == null ||
+                request.sourceType().isBlank()){
+
+            return Response
+                    .status(Response.Status.BAD_REQUEST)
+                    .entity("companyId and positionTitle are required.")
+                    .build();
+        }
+
+        Company company = entityManager.find(Company.class, request.companyId());
+
+        if (company == null) {
+            return Response
+                    .status(Response.Status.NOT_FOUND)
+                    .entity("Company not found.")
+                    .build();
+        }
+
+        JobOffer offer = new JobOffer();
+
+        offer.setCompany(company);
+        offer.setPositionTitle(request.positionTitle());
+        offer.setLocation(request.location());
+        offer.setSalaryMin(request.salaryMin());
+        offer.setSalaryMax(request.salaryMax());
+        offer.setSalaryCurrency(request.salaryCurrency());
+        offer.setSalaryPeriod(request.salaryPeriod());
+
+        try {
+            offer.setSourceType(
+                    JobOffer.SourceType.valueOf(request.sourceType())
+            );
+
+            if (request.workMode() != null) {
+                offer.setWorkMode(
+                        JobOffer.WorkMode.valueOf(request.workMode())
+                );
+            }
+
+            if (request.employmentType() != null) {
+                offer.setEmploymentType(
+                        JobOffer.EmploymentType.valueOf(request.employmentType())
+                );
+            }
+        } catch (IllegalArgumentException e) {
+            return Response
+                    .status(Response.Status.BAD_REQUEST)
+                    .entity("Invalid enum value.")
+                    .build();
+        }
+
+        entityManager.persist(offer);
+        entityManager.flush();
+
+        return Response
+                .status(Response.Status.CREATED)
+                .entity(new JobOfferResponse(
+                        offer.getId(),
+                        company.getName(),
+                        offer.getPositionTitle(),
+                        offer.getLocation(),
+                        offer.getSalaryMin(),
+                        offer.getSalaryMax(),
+                        offer.getSalaryCurrency(),
+                        offer.getSalaryPeriod()
+                ))
+                .build();
+    }
+
 }

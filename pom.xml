@@ -25,6 +25,13 @@
             <artifactId>jakarta.jakartaee-api</artifactId>
             <version>11.0.0</version>
             <scope>provided</scope>
+          </dependency>
+
+          <dependency>
+            <groupId>org.hibernate.orm</groupId>
+            <artifactId>hibernate-core</artifactId>
+            <version>7.4.5.Final</version>
+            <scope>provided</scope>
         </dependency>
     </dependencies>
 

@@ -10,11 +10,56 @@ import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.Table;
 
+import jakarta.persistence.EnumType;
+import jakarta.persistence.Enumerated;
+import org.hibernate.annotations.JdbcTypeCode;
+import org.hibernate.type.SqlTypes;
+
 import java.math.BigDecimal;
 
 @Entity
 @Table(name = "job_offer")
 public class JobOffer {
+
+    public enum SourceType {
+        LINKEDIN,
+        PRACUJ,
+        JUSTJOINIT,
+        NOFLUFFJOBS,
+        COMPANY_WEBSITE,
+        RECRUITER,
+        REFERRAL,
+        JOB_BOARD,
+        OTHER
+    }
+
+    public enum WorkMode {
+        REMOTE,
+        HYBRID,
+        ONSITE
+    }
+
+    public enum EmploymentType {
+        EMPLOYMENT_CONTRACT,
+        B2B,
+        MANDATE,
+        OTHER
+    }
+
+    @Enumerated(EnumType.STRING)
+    @JdbcTypeCode(SqlTypes.NAMED_ENUM)
+    @Column(name = "source_type", nullable = false)
+    private SourceType sourceType;
+
+    @Enumerated(EnumType.STRING)
+    @JdbcTypeCode(SqlTypes.NAMED_ENUM)
+    @Column(name = "work_mode")
+    private WorkMode workMode;
+
+    @Enumerated(EnumType.STRING)
+    @JdbcTypeCode(SqlTypes.NAMED_ENUM)
+    @Column(name = "employment_type")
+    private EmploymentType employmentType;
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -73,4 +118,57 @@ public class JobOffer {
     public String getSalaryPeriod() {
         return salaryPeriod;
     }
+
+    public void setCompany(Company company) {
+        this.company = company;
+    }
+
+    public void setPositionTitle(String positionTitle) {
+        this.positionTitle = positionTitle;
+    }
+
+    public void setLocation(String location) {
+        this.location = location;
+    }
+
+    public void setSalaryMin(BigDecimal salaryMin) {
+        this.salaryMin = salaryMin;
+    }
+
+    public void setSalaryMax(BigDecimal salaryMax) {
+        this.salaryMax = salaryMax;
+    }
+
+    public void setSalaryCurrency(String salaryCurrency) {
+        this.salaryCurrency = salaryCurrency;
+    }
+
+    public void setSalaryPeriod(String salaryPeriod) {
+        this.salaryPeriod = salaryPeriod;
+    }
+
+    public void setSourceType(SourceType sourceType) {
+        this.sourceType = sourceType;
+    }
+
+    public void setWorkMode(WorkMode workMode) {
+        this.workMode = workMode;
+    }
+
+    public void setEmploymentType(EmploymentType employmentType) {
+        this.employmentType = employmentType;
+    }
+
+    public SourceType getSourceType() {
+        return sourceType;
+    }
+
+    public WorkMode getWorkMode() {
+        return workMode;
+    }
+
+    public EmploymentType getEmploymentType() {
+        return employmentType;
+    }
+
 }
