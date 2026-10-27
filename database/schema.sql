@@ -123,3 +123,111 @@ CREATE TABLE job_application (
     )
 );
 
+CREATE TYPE requirement_level AS ENUM (
+    'REQUIRED',
+    'PREFERRED',
+    'OPTIONAL'
+);
+
+CREATE TYPE interview_type AS ENUM (
+    'HR',
+    'TECHNICAL',
+    'MANAGER',
+    'TASK_REVIEW',
+    'FINAL',
+    'OTHER'
+);
+
+CREATE TYPE interview_location_type AS ENUM (
+    'PHONE',
+    'TEAMS',
+    'ZOOM',
+    'GOOGLE_MEET',
+    'ONSITE',
+    'OTHER'
+);
+
+CREATE TABLE technology (
+    id BIGSERIAL PRIMARY KEY,
+    name VARCHAR(255) NOT NULL UNIQUE,
+    category VARCHAR(100)
+);
+
+CREATE TABLE job_offer_technology (
+    job_offer_id BIGINT NOT NULL REFERENCES job_offer(id) ON DELETE CASCADE,
+    technology_id BIGINT NOT NULL REFERENCES technology(id),
+    requirement_level requirement_level NOT NULL,
+
+    PRIMARY KEY (job_offer_id, technology_id)
+);
+
+CREATE TABLE recruiter (
+    id BIGSERIAL PRIMARY KEY,
+    company_id BIGINT NOT NULL REFERENCES company(id),
+
+    first_name VARCHAR(100) NOT NULL,
+    last_name VARCHAR(100) NOT NULL,
+    position VARCHAR(255),
+
+    email VARCHAR(255),
+    phone VARCHAR(50),
+    linkedin_url VARCHAR(500),
+
+    notes TEXT,
+
+    created_at TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE TABLE application_status_history (
+    id BIGSERIAL PRIMARY KEY,
+    application_id BIGINT NOT NULL REFERENCES job_application(id) ON DELETE CASCADE,
+
+    status application_status NOT NULL,
+    changed_at TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    comment TEXT
+);
+
+CREATE TABLE interview (
+    id BIGSERIAL PRIMARY KEY,
+    application_id BIGINT NOT NULL REFERENCES job_application(id) ON DELETE CASCADE,
+
+    interview_type interview_type NOT NULL,
+    scheduled_at TIMESTAMPTZ NOT NULL,
+    duration_minutes INTEGER,
+
+    location_type interview_location_type,
+    location_details TEXT,
+
+    result VARCHAR(100),
+    summary TEXT,
+    questions TEXT,
+    my_notes TEXT,
+
+    created_at TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP,
+
+    CHECK (duration_minutes IS NULL OR duration_minutes > 0)
+);
+
+CREATE TABLE application_recruiter (
+    application_id BIGINT NOT NULL REFERENCES job_application(id) ON DELETE CASCADE,
+    recruiter_id BIGINT NOT NULL REFERENCES recruiter(id),
+
+    PRIMARY KEY (application_id, recruiter_id)
+);
+
+CREATE INDEX idx_job_offer_company
+    ON job_offer(company_id);
+
+CREATE INDEX idx_job_application_offer
+    ON job_application(job_offer_id);
+
+CREATE INDEX idx_status_history_application
+    ON application_status_history(application_id);
+
+CREATE INDEX idx_interview_application
+    ON interview(application_id);
+
+CREATE INDEX idx_recruiter_company
+    ON recruiter(company_id);
