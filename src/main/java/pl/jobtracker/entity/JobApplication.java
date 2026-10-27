@@ -12,6 +12,9 @@ import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.Table;
 
+import org.hibernate.annotations.JdbcTypeCode;
+import org.hibernate.type.SqlTypes;
+
 import java.math.BigDecimal;
 import java.time.OffsetDateTime;
 
@@ -47,6 +50,7 @@ public class JobApplication {
     private OffsetDateTime appliedAt;
 
     @Enumerated(EnumType.STRING)
+    @JdbcTypeCode(SqlTypes.NAMED_ENUM)
     @Column(name = "current_status", nullable = false)
     private ApplicationStatus currentStatus;
 
@@ -105,5 +109,41 @@ public class JobApplication {
 
     public String getExpectedSalaryCurrency() {
         return expectedSalaryCurrency;
+    }
+
+    public void setJobOffer(JobOffer jobOffer) {
+        this.jobOffer = jobOffer;
+    }
+
+    public void setAppliedAt(OffsetDateTime appliedAt) {
+        this.appliedAt = appliedAt;
+    }
+
+    public void setCurrentStatus(ApplicationStatus currentStatus) {
+        this.currentStatus = currentStatus;
+    }
+
+    public void setPriority(Short priority) {
+        this.priority = priority;
+    }
+
+    public void setFitScore(Short fitScore) {
+        this.fitScore = fitScore;
+    }
+
+    public void setInterestScore(Short interestScore) {
+        this.interestScore = interestScore;
+    }
+
+    public void setExpectedSalaryMin(BigDecimal expectedSalaryMin) {
+        this.expectedSalaryMin = expectedSalaryMin;
+    }
+
+    public void setExpectedSalaryMax(BigDecimal expectedSalaryMax) {
+        this.expectedSalaryMax = expectedSalaryMax;
+    }
+
+    public void setExpectedSalaryCurrency(String expectedSalaryCurrency) {
+        this.expectedSalaryCurrency = expectedSalaryCurrency;
     }
 }
