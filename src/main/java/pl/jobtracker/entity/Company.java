@@ -67,4 +67,32 @@ public class Company {
     public String getNotes() {
         return notes;
     }
+
+    public void setName(String name) {
+        this.name = name;
+    }
+
+    public void setWebsite(String website) {
+        this.website = website;
+    }
+
+    public void setIndustry(String industry) {
+        this.industry = industry;
+    }
+
+    public void setCity(String city) {
+        this.city = city;
+    }
+
+    public void setCountry(String country) {
+        this.country = country;
+    }
+
+    public void setDescription(String description) {
+        this.description = description;
+    }
+
+    public void setNotes(String notes) {
+        this.notes = notes;
+    }
 }
