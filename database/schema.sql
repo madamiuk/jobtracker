@@ -231,3 +231,118 @@ CREATE INDEX idx_interview_application
 
 CREATE INDEX idx_recruiter_company
     ON recruiter(company_id);
+
+CREATE TYPE contact_type AS ENUM (
+    'EMAIL',
+    'PHONE',
+    'LINKEDIN',
+    'MESSAGE',
+    'FOLLOW_UP',
+    'DOCUMENT_REQUEST',
+    'FEEDBACK',
+    'OTHER'
+);
+
+CREATE TYPE contact_direction AS ENUM (
+    'INBOUND',
+    'OUTBOUND'
+);
+
+CREATE TYPE document_type AS ENUM (
+    'CV',
+    'COVER_LETTER',
+    'PORTFOLIO',
+    'CERTIFICATE',
+    'TASK',
+    'OTHER'
+);
+
+CREATE TYPE salary_proposal_type AS ENUM (
+    'JOB_OFFER',
+    'MY_EXPECTATION',
+    'COMPANY_INITIAL',
+    'COMPANY_FINAL',
+    'ACCEPTED'
+);
+
+CREATE TABLE contact_event (
+    id BIGSERIAL PRIMARY KEY,
+    application_id BIGINT NOT NULL REFERENCES job_application(id) ON DELETE CASCADE,
+    recruiter_id BIGINT REFERENCES recruiter(id),
+
+    contact_type contact_type NOT NULL,
+    contact_at TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    direction contact_direction NOT NULL,
+
+    subject VARCHAR(255),
+    description TEXT,
+
+    follow_up_required BOOLEAN NOT NULL DEFAULT FALSE,
+    follow_up_at TIMESTAMPTZ,
+    follow_up_done BOOLEAN NOT NULL DEFAULT FALSE,
+
+    created_at TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE TABLE document (
+    id BIGSERIAL PRIMARY KEY,
+    application_id BIGINT NOT NULL REFERENCES job_application(id) ON DELETE CASCADE,
+
+    document_type document_type NOT NULL,
+    file_name VARCHAR(255) NOT NULL,
+    file_path VARCHAR(1000),
+
+    version VARCHAR(50),
+    sent_at TIMESTAMPTZ,
+
+    sha256 CHAR(64),
+    notes TEXT,
+
+    created_at TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP,
+
+    UNIQUE (application_id, file_name, version)
+);
+
+CREATE TABLE salary_proposal (
+    id BIGSERIAL PRIMARY KEY,
+    application_id BIGINT NOT NULL REFERENCES job_application(id) ON DELETE CASCADE,
+
+    proposal_type salary_proposal_type NOT NULL,
+
+    amount_min NUMERIC(12,2),
+    amount_max NUMERIC(12,2),
+    currency CHAR(3),
+    period VARCHAR(50),
+
+    proposed_at TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    notes TEXT,
+
+    CHECK (
+        amount_min IS NULL
+        OR amount_max IS NULL
+        OR amount_min <= amount_max
+    )
+);
+
+CREATE TABLE note (
+    id BIGSERIAL PRIMARY KEY,
+    application_id BIGINT NOT NULL REFERENCES job_application(id) ON DELETE CASCADE,
+
+    created_at TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    content TEXT NOT NULL
+);
+
+CREATE INDEX idx_contact_event_application
+    ON contact_event(application_id);
+
+CREATE INDEX idx_contact_event_recruiter
+    ON contact_event(recruiter_id);
+
+CREATE INDEX idx_document_application
+    ON document(application_id);
+
+CREATE INDEX idx_salary_proposal_application
+    ON salary_proposal(application_id);
+
+CREATE INDEX idx_note_application
+    ON note(application_id);
