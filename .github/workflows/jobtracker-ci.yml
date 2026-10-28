@@ -1,0 +1,41 @@
+name: JobTracker CI
+
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+    branches:
+      - main
+
+jobs:
+  build:
+    name: Maven Build
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v7
+
+      - name: Setup Java
+        uses: actions/setup-java@v6
+        with:
+          distribution: temurin
+          java-version: "21"
+          cache: maven
+
+      - name: Java version
+        run: java -version
+
+      - name: Maven version
+        run: mvn -version
+
+      - name: Build JobTracker
+        run: mvn --batch-mode --no-transfer-progress clean verify
+
+      - name: Verify WAR artifact
+        run: |
+          test -f target/jobtracker.war
+          ls -lh target/jobtracker.war
+          jar tf target/jobtracker.war | grep 'WEB-INF/classes/pl/jobtracker/rest/HealthResource.class'
+          jar tf target/jobtracker.war | grep 'WEB-INF/classes/META-INF/persistence.xml'
