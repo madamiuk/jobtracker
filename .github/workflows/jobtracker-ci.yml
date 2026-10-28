@@ -39,3 +39,11 @@ jobs:
           ls -lh target/jobtracker.war
           jar tf target/jobtracker.war | grep 'WEB-INF/classes/pl/jobtracker/rest/HealthResource.class'
           jar tf target/jobtracker.war | grep 'WEB-INF/classes/META-INF/persistence.xml'
+
+      - name: Upload JobTracker WAR
+        uses: actions/upload-artifact@v6
+        with:
+          name: jobtracker-war
+          path: target/jobtracker.war
+          if-no-files-found: error
+          retention-days: 14
