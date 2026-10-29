@@ -1,0 +1,331 @@
+<!DOCTYPE html>
+<html lang="pl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <title>JobTracker</title>
+
+    <link rel="stylesheet" href="styles.css">
+</head>
+
+<body>
+
+<header class="page-header">
+    <div>
+        <h1>JobTracker</h1>
+        <p>Kontrola procesu rekrutacyjnego</p>
+    </div>
+
+    <button id="refreshButton" type="button">
+        Odśwież
+    </button>
+</header>
+
+<main>
+
+    <section class="panel">
+        <h2>Nowa firma</h2>
+
+        <form id="companyForm">
+
+            <div class="form-grid">
+
+                <label>
+                    Nazwa firmy
+                    <input id="companyName" type="text" required>
+                </label>
+
+                <label>
+                    WWW
+                    <input id="companyWebsite" type="url">
+                </label>
+
+                <label>
+                    Branża
+                    <input id="companyIndustry" type="text">
+                </label>
+
+                <label>
+                    Miasto
+                    <input id="companyCity" type="text">
+                </label>
+
+                <label>
+                    Kraj
+                    <input id="companyCountry" type="text" value="Poland">
+                </label>
+
+            </div>
+
+            <div class="form-actions">
+                <button type="submit">
+                    Dodaj firmę
+                </button>
+
+                <span id="companyMessage"></span>
+            </div>
+
+        </form>
+    </section>
+
+
+    <section class="panel">
+        <h2>Nowa oferta pracy</h2>
+
+        <form id="offerForm">
+
+            <div class="form-grid">
+
+                <label>
+                    Firma
+                    <select id="offerCompanyId" required>
+                        <option value="">Ładowanie firm...</option>
+                    </select>
+                </label>
+
+                <label>
+                    Stanowisko
+                    <input id="offerPositionTitle" type="text" required>
+                </label>
+
+                <label>
+                    Lokalizacja
+                    <input id="offerLocation" type="text">
+                </label>
+
+                <label>
+                    Źródło
+                    <select id="offerSourceType" required>
+                        <option value="LINKEDIN">LinkedIn</option>
+                        <option value="PRACUJ">Pracuj.pl</option>
+                        <option value="JUSTJOINIT">Just Join IT</option>
+                        <option value="NOFLUFFJOBS">No Fluff Jobs</option>
+                        <option value="COMPANY_WEBSITE">Strona firmy</option>
+                        <option value="RECRUITER">Rekruter</option>
+                        <option value="REFERRAL">Polecenie</option>
+                        <option value="JOB_BOARD">Portal pracy</option>
+                        <option value="OTHER">Inne</option>
+                    </select>
+                </label>
+
+                <label>
+                    Tryb pracy
+                    <select id="offerWorkMode">
+                        <option value="">Nie określono</option>
+                        <option value="REMOTE">Zdalnie</option>
+                        <option value="HYBRID">Hybrydowo</option>
+                        <option value="ONSITE">Stacjonarnie</option>
+                    </select>
+                </label>
+
+                <label>
+                    Typ zatrudnienia
+                    <select id="offerEmploymentType">
+                        <option value="">Nie określono</option>
+                        <option value="EMPLOYMENT_CONTRACT">Umowa o pracę</option>
+                        <option value="B2B">B2B</option>
+                        <option value="MANDATE">Umowa zlecenie</option>
+                        <option value="OTHER">Inne</option>
+                    </select>
+                </label>
+
+                <label>
+                    Wynagrodzenie od
+                    <input id="offerSalaryMin" type="number" min="0" step="100">
+                </label>
+
+                <label>
+                    Wynagrodzenie do
+                    <input id="offerSalaryMax" type="number" min="0" step="100">
+                </label>
+
+                <label>
+                    Waluta
+                    <select id="offerSalaryCurrency">
+                        <option value="PLN">PLN</option>
+                        <option value="EUR">EUR</option>
+                        <option value="USD">USD</option>
+                    </select>
+                </label>
+
+                <label>
+                    Okres wynagrodzenia
+                    <select id="offerSalaryPeriod">
+                        <option value="MONTH">Miesiąc</option>
+                        <option value="YEAR">Rok</option>
+                        <option value="HOUR">Godzina</option>
+                    </select>
+                </label>
+
+            </div>
+
+            <div class="form-actions">
+                <button type="submit">
+                    Dodaj ofertę
+                </button>
+
+                <span id="offerMessage"></span>
+            </div>
+
+        </form>
+    </section>
+
+
+    <section class="panel">
+        <h2>Nowa aplikacja</h2>
+
+        <form id="applicationForm">
+
+            <div class="form-grid">
+
+                <label>
+                    Oferta pracy
+                    <select id="jobOfferId" required>
+                        <option value="">Ładowanie ofert...</option>
+                    </select>
+                </label>
+
+                <label>
+                    Status
+                    <select id="currentStatus" required>
+                        <option value="PLANNED">Planowana</option>
+                        <option value="APPLIED" selected>Wysłana</option>
+                        <option value="HR_SCREENING">HR screening</option>
+                        <option value="HR_INTERVIEW">Rozmowa HR</option>
+                        <option value="TECH_INTERVIEW">Rozmowa techniczna</option>
+                        <option value="TASK">Zadanie</option>
+                        <option value="MANAGER_INTERVIEW">Rozmowa z managerem</option>
+                        <option value="FINAL_INTERVIEW">Final interview</option>
+                        <option value="WAITING">Oczekiwanie</option>
+                        <option value="OFFER">Oferta</option>
+                        <option value="REJECTED">Odrzucona</option>
+                        <option value="WITHDRAWN">Wycofana</option>
+                        <option value="HIRED">Zatrudnienie</option>
+                    </select>
+                </label>
+
+                <label>
+                    Data aplikacji
+                    <input id="appliedAt" type="datetime-local">
+                </label>
+
+                <label>
+                    Priorytet
+                    <input id="priority" type="number" min="1" max="5" value="3">
+                </label>
+
+                <label>
+                    Dopasowanie
+                    <input id="fitScore" type="number" min="1" max="5" value="3">
+                </label>
+
+                <label>
+                    Zainteresowanie
+                    <input id="interestScore" type="number" min="1" max="5" value="3">
+                </label>
+
+                <label>
+                    Oczekiwana pensja od
+                    <input id="expectedSalaryMin" type="number" min="0" step="100">
+                </label>
+
+                <label>
+                    Oczekiwana pensja do
+                    <input id="expectedSalaryMax" type="number" min="0" step="100">
+                </label>
+
+                <label>
+                    Waluta
+                    <select id="expectedSalaryCurrency">
+                        <option value="PLN">PLN</option>
+                        <option value="EUR">EUR</option>
+                        <option value="USD">USD</option>
+                    </select>
+                </label>
+
+            </div>
+
+            <div class="form-actions">
+                <button type="submit">
+                    Dodaj aplikację
+                </button>
+
+                <span id="applicationMessage"></span>
+            </div>
+
+        </form>
+    </section>
+
+
+    <section class="panel">
+
+        <div class="section-header">
+            <h2>Oferty</h2>
+            <span id="offerCount">0 ofert</span>
+        </div>
+
+        <div class="table-wrapper">
+
+            <table>
+                <thead>
+                <tr>
+                    <th>ID</th>
+                    <th>Firma</th>
+                    <th>Stanowisko</th>
+                    <th>Lokalizacja</th>
+                    <th>Wynagrodzenie</th>
+                </tr>
+                </thead>
+
+                <tbody id="offersTableBody">
+                <tr>
+                    <td colspan="5">Ładowanie danych...</td>
+                </tr>
+                </tbody>
+            </table>
+
+        </div>
+    </section>
+
+
+    <section class="panel">
+
+        <div class="section-header">
+            <h2>Aplikacje</h2>
+            <span id="applicationCount">0 aplikacji</span>
+        </div>
+
+        <div class="table-wrapper">
+
+            <table>
+                <thead>
+                <tr>
+                    <th>ID</th>
+                    <th>Firma</th>
+                    <th>Stanowisko</th>
+                    <th>Status</th>
+                    <th>Data</th>
+                    <th>Priorytet</th>
+                    <th>Dopasowanie</th>
+                    <th>Zainteresowanie</th>
+                    <th>Oczekiwania</th>
+                </tr>
+                </thead>
+
+                <tbody id="applicationsTableBody">
+                <tr>
+                    <td colspan="9">Ładowanie danych...</td>
+                </tr>
+                </tbody>
+            </table>
+
+        </div>
+    </section>
+
+</main>
+
+<script src="app.js"></script>
+
+</body>
+</html>
