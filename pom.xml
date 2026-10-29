@@ -18,6 +18,9 @@
         <maven.compiler.release>21</maven.compiler.release>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         <junit.version>5.11.4</junit.version>
+        <mockito.version>5.24.0</mockito.version>
+        <resteasy.version>7.0.5.Final</resteasy.version>
+        <argLine></argLine>
     </properties>
 
     <dependencies>
@@ -41,6 +44,20 @@
             <version>${junit.version}</version>
             <scope>test</scope>
           </dependency>
+
+          <dependency>
+            <groupId>org.mockito</groupId>
+            <artifactId>mockito-junit-jupiter</artifactId>
+            <version>${mockito.version}</version>
+            <scope>test</scope>
+          </dependency>
+
+          <dependency>
+            <groupId>org.jboss.resteasy</groupId>
+            <artifactId>resteasy-core</artifactId>
+            <version>${resteasy.version}</version>
+            <scope>test</scope>
+          </dependency>
     </dependencies>
 
     <build>
@@ -60,6 +77,30 @@
                 <configuration>
                     <failOnMissingWebXml>false</failOnMissingWebXml>
                 </configuration>
+            </plugin>
+
+            <plugin>
+              <groupId>org.apache.maven.plugins</groupId>
+              <artifactId>maven-dependency-plugin</artifactId>
+              <version>3.8.1</version>
+              <executions>
+                <execution>
+                  <goals>
+                    <goal>properties</goal>
+                  </goals>
+                </execution>
+              </executions>
+            </plugin>
+
+            <plugin>
+              <groupId>org.apache.maven.plugins</groupId>
+              <artifactId>maven-surefire-plugin</artifactId>
+              <version>3.6.0</version>
+              <configuration>
+                <argLine>
+                  @{argLine} -javaagent:${org.mockito:mockito-core:jar}
+                </argLine>
+              </configuration>
             </plugin>
         </plugins>
     </build>
