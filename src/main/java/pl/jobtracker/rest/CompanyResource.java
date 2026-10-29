@@ -22,6 +22,12 @@ import java.util.List;
 @Produces(MediaType.APPLICATION_JSON)
 public class CompanyResource {
 
+    static boolean isValidCreateRequest(CreateCompanyRequest request) {
+    return request != null
+            && request.name() != null
+            && !request.name().isBlank();
+    }
+
     @PersistenceContext(unitName = "JobTrackerPU")
     private EntityManager entityManager;
 
@@ -40,9 +46,7 @@ public class CompanyResource {
     @Transactional
     public Response createCompany(CreateCompanyRequest request) {
 
-        if (request == null ||
-                request.name() == null ||
-                request.name().isBlank()) {
+        if (!isValidCreateRequest(request)) {
 
             return Response
                     .status(Response.Status.BAD_REQUEST)

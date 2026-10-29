@@ -27,6 +27,25 @@ public class JobApplicationResource {
     @PersistenceContext(unitName = "JobTrackerPU")
     private EntityManager entityManager;
 
+    static boolean isValidApplicationStatus(String value) {
+        try {
+            JobApplication.ApplicationStatus.valueOf(value);
+            return true;
+        } catch (IllegalArgumentException | NullPointerException e) {
+            return false;
+        }
+    }
+
+    static boolean isValidCreateRequest(
+            CreateJobApplicationRequest request
+    ) {
+        return request != null
+                && request.jobOfferId() != null
+                && request.currentStatus() != null
+                && !request.currentStatus().isBlank()
+                && isValidApplicationStatus(request.currentStatus());
+    }
+
     @GET
     public List<JobApplicationResponse> listApplications() {
         List<JobApplication> applications = entityManager
@@ -62,16 +81,14 @@ public class JobApplicationResource {
     @POST
     @Consumes(MediaType.APPLICATION_JSON)
     @Transactional
-    public Response createApplication(CreateJobApplicationRequest request) {
+    public Response createApplication(
+            CreateJobApplicationRequest request
+    ) {
 
-        if (request == null ||
-                request.jobOfferId() == null ||
-                request.currentStatus() == null ||
-                request.currentStatus().isBlank()) {
-
+        if (!isValidCreateRequest(request)) {
             return Response
                     .status(Response.Status.BAD_REQUEST)
-                    .entity("jobOfferId and currentStatus are required.")
+                    .entity("Invalid job application request.")
                     .build();
         }
 
@@ -87,29 +104,24 @@ public class JobApplicationResource {
                     .build();
         }
 
-        JobApplication.ApplicationStatus applicationStatus;
-
-        try {
-            applicationStatus = JobApplication.ApplicationStatus.valueOf(
-                    request.currentStatus()
-            );
-        } catch (IllegalArgumentException e) {
-            return Response
-                    .status(Response.Status.BAD_REQUEST)
-                    .entity("Invalid application status.")
-                    .build();
-        }
-
         JobApplication application = new JobApplication();
 
         application.setJobOffer(jobOffer);
         application.setAppliedAt(request.appliedAt());
-        application.setCurrentStatus(applicationStatus);
+        application.setCurrentStatus(
+                JobApplication.ApplicationStatus.valueOf(
+                        request.currentStatus()
+                )
+        );
         application.setPriority(request.priority());
         application.setFitScore(request.fitScore());
         application.setInterestScore(request.interestScore());
-        application.setExpectedSalaryMin(request.expectedSalaryMin());
-        application.setExpectedSalaryMax(request.expectedSalaryMax());
+        application.setExpectedSalaryMin(
+                request.expectedSalaryMin()
+        );
+        application.setExpectedSalaryMax(
+                request.expectedSalaryMax()
+        );
         application.setExpectedSalaryCurrency(
                 request.expectedSalaryCurrency()
         );
@@ -117,19 +129,20 @@ public class JobApplicationResource {
         entityManager.persist(application);
         entityManager.flush();
 
-        JobApplicationResponse response = new JobApplicationResponse(
-                application.getId(),
-                jobOffer.getCompany().getName(),
-                jobOffer.getPositionTitle(),
-                application.getCurrentStatus().name(),
-                application.getAppliedAt(),
-                application.getPriority(),
-                application.getFitScore(),
-                application.getInterestScore(),
-                application.getExpectedSalaryMin(),
-                application.getExpectedSalaryMax(),
-                application.getExpectedSalaryCurrency()
-        );
+        JobApplicationResponse response =
+                new JobApplicationResponse(
+                        application.getId(),
+                        jobOffer.getCompany().getName(),
+                        jobOffer.getPositionTitle(),
+                        application.getCurrentStatus().name(),
+                        application.getAppliedAt(),
+                        application.getPriority(),
+                        application.getFitScore(),
+                        application.getInterestScore(),
+                        application.getExpectedSalaryMin(),
+                        application.getExpectedSalaryMax(),
+                        application.getExpectedSalaryCurrency()
+                );
 
         return Response
                 .status(Response.Status.CREATED)

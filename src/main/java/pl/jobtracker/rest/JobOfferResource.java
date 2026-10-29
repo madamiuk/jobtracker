@@ -3,19 +3,19 @@ package pl.jobtracker.rest;
 import jakarta.enterprise.context.RequestScoped;
 import jakarta.persistence.EntityManager;
 import jakarta.persistence.PersistenceContext;
+import jakarta.transaction.Transactional;
+import jakarta.ws.rs.Consumes;
 import jakarta.ws.rs.GET;
+import jakarta.ws.rs.POST;
 import jakarta.ws.rs.Path;
 import jakarta.ws.rs.Produces;
 import jakarta.ws.rs.core.MediaType;
-import pl.jobtracker.dto.JobOfferResponse;
-import pl.jobtracker.entity.JobOffer;
-
-import jakarta.transaction.Transactional;
-import jakarta.ws.rs.Consumes;
-import jakarta.ws.rs.POST;
 import jakarta.ws.rs.core.Response;
+
 import pl.jobtracker.dto.CreateJobOfferRequest;
+import pl.jobtracker.dto.JobOfferResponse;
 import pl.jobtracker.entity.Company;
+import pl.jobtracker.entity.JobOffer;
 
 import java.util.List;
 
@@ -26,6 +26,53 @@ public class JobOfferResource {
 
     @PersistenceContext(unitName = "JobTrackerPU")
     private EntityManager entityManager;
+
+    static boolean isValidSourceType(String value) {
+        try {
+            JobOffer.SourceType.valueOf(value);
+            return true;
+        } catch (IllegalArgumentException | NullPointerException e) {
+            return false;
+        }
+    }
+
+    static boolean isValidWorkMode(String value) {
+        if (value == null) {
+            return true;
+        }
+
+        try {
+            JobOffer.WorkMode.valueOf(value);
+            return true;
+        } catch (IllegalArgumentException e) {
+            return false;
+        }
+    }
+
+    static boolean isValidEmploymentType(String value) {
+        if (value == null) {
+            return true;
+        }
+
+        try {
+            JobOffer.EmploymentType.valueOf(value);
+            return true;
+        } catch (IllegalArgumentException e) {
+            return false;
+        }
+    }
+
+    static boolean isValidCreateRequest(CreateJobOfferRequest request) {
+        return request != null
+                && request.companyId() != null
+                && request.positionTitle() != null
+                && !request.positionTitle().isBlank()
+                && request.sourceType() != null
+                && !request.sourceType().isBlank()
+                && isValidSourceType(request.sourceType())
+                && isValidWorkMode(request.workMode())
+                && isValidEmploymentType(request.employmentType());
+    }
 
     @GET
     public List<JobOfferResponse> listOffers() {
@@ -60,20 +107,17 @@ public class JobOfferResource {
     @Transactional
     public Response createOffer(CreateJobOfferRequest request) {
 
-        if (request == null ||
-                request.companyId() == null ||
-                request.positionTitle() == null ||
-                request.positionTitle().isBlank() ||
-                request.sourceType() == null ||
-                request.sourceType().isBlank()){
-
+        if (!isValidCreateRequest(request)) {
             return Response
                     .status(Response.Status.BAD_REQUEST)
-                    .entity("companyId and positionTitle are required.")
+                    .entity("Invalid job offer request.")
                     .build();
         }
 
-        Company company = entityManager.find(Company.class, request.companyId());
+        Company company = entityManager.find(
+                Company.class,
+                request.companyId()
+        );
 
         if (company == null) {
             return Response
@@ -92,27 +136,20 @@ public class JobOfferResource {
         offer.setSalaryCurrency(request.salaryCurrency());
         offer.setSalaryPeriod(request.salaryPeriod());
 
-        try {
-            offer.setSourceType(
-                    JobOffer.SourceType.valueOf(request.sourceType())
+        offer.setSourceType(
+                JobOffer.SourceType.valueOf(request.sourceType())
+        );
+
+        if (request.workMode() != null) {
+            offer.setWorkMode(
+                    JobOffer.WorkMode.valueOf(request.workMode())
             );
+        }
 
-            if (request.workMode() != null) {
-                offer.setWorkMode(
-                        JobOffer.WorkMode.valueOf(request.workMode())
-                );
-            }
-
-            if (request.employmentType() != null) {
-                offer.setEmploymentType(
-                        JobOffer.EmploymentType.valueOf(request.employmentType())
-                );
-            }
-        } catch (IllegalArgumentException e) {
-            return Response
-                    .status(Response.Status.BAD_REQUEST)
-                    .entity("Invalid enum value.")
-                    .build();
+        if (request.employmentType() != null) {
+            offer.setEmploymentType(
+                    JobOffer.EmploymentType.valueOf(request.employmentType())
+            );
         }
 
         entityManager.persist(offer);
@@ -132,5 +169,4 @@ public class JobOfferResource {
                 ))
                 .build();
     }
-
 }
