@@ -2,6 +2,7 @@ package pl.jobtracker.rest;
 
 import org.junit.jupiter.api.Test;
 import pl.jobtracker.dto.CreateJobApplicationRequest;
+import pl.jobtracker.dto.UpdateApplicationStatusRequest;
 
 import java.time.OffsetDateTime;
 
@@ -109,6 +110,55 @@ class JobApplicationResourceValidationTest {
 
         assertFalse(
                 JobApplicationResource.isValidCreateRequest(request)
+        );
+    }
+
+    @Test
+    void nullStatusUpdateShouldBeRejected() {
+        assertFalse(
+                JobApplicationResource.isValidStatusUpdateRequest(null)
+        );
+    }
+
+    @Test
+    void blankStatusUpdateShouldBeRejected() {
+        var request =
+                new UpdateApplicationStatusRequest(
+                        "   ",
+                        OffsetDateTime.now(),
+                        "test"
+                );
+
+        assertFalse(
+                JobApplicationResource.isValidStatusUpdateRequest(request)
+        );
+    }
+
+    @Test
+    void invalidStatusUpdateShouldBeRejected() {
+        var request =
+                new UpdateApplicationStatusRequest(
+                        "INVALID_STATUS",
+                        OffsetDateTime.now(),
+                        "test"
+                );
+
+        assertFalse(
+                JobApplicationResource.isValidStatusUpdateRequest(request)
+        );
+    }
+
+    @Test
+    void validStatusUpdateShouldBeAccepted() {
+        var request =
+                new UpdateApplicationStatusRequest(
+                        "TECH_INTERVIEW",
+                        OffsetDateTime.now(),
+                        "Technical interview scheduled"
+                );
+
+        assertTrue(
+                JobApplicationResource.isValidStatusUpdateRequest(request)
         );
     }
 }

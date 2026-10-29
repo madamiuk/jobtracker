@@ -3,6 +3,7 @@ package pl.jobtracker.rest;
 import jakarta.persistence.EntityManager;
 import jakarta.ws.rs.core.Response;
 import org.junit.jupiter.api.Test;
+import org.mockito.ArgumentCaptor;
 
 import pl.jobtracker.dto.CreateJobOfferRequest;
 import pl.jobtracker.entity.Company;
@@ -154,5 +155,128 @@ class JobOfferResourceBehaviorTest {
 
         verify(entityManager)
                 .flush();
+    }
+
+    @Test
+    void createdOfferShouldBeActive()
+            throws Exception {
+
+        EntityManager entityManager =
+                mock(EntityManager.class);
+
+        Company company =
+                new Company();
+
+        company.setName("Example Company");
+
+        when(
+                entityManager.find(
+                        Company.class,
+                        1L
+                )
+        ).thenReturn(company);
+
+        JobOfferResource resource =
+                createResource(entityManager);
+
+        resource.createOffer(
+                validRequest()
+        );
+
+        ArgumentCaptor<JobOffer> captor =
+                ArgumentCaptor.forClass(
+                        JobOffer.class
+                );
+
+        verify(entityManager)
+                .persist(captor.capture());
+
+        assertEquals(
+                JobOffer.OfferStatus.ACTIVE,
+                captor.getValue().getStatus()
+        );
+    }
+
+
+    @Test
+    void archiveOfferShouldSetArchivedStatus()
+            throws Exception {
+
+        EntityManager entityManager =
+                mock(EntityManager.class);
+
+        JobOffer offer =
+                new JobOffer();
+
+        Company company =
+                new Company();
+
+        company.setName("Example Company");
+
+        offer.setCompany(company);
+        offer.setPositionTitle(
+                "Linux Administrator"
+        );
+        offer.setStatus(
+                JobOffer.OfferStatus.ACTIVE
+        );
+
+        when(
+                entityManager.find(
+                        JobOffer.class,
+                        10L
+                )
+        ).thenReturn(offer);
+
+        JobOfferResource resource =
+                createResource(entityManager);
+
+        Response response =
+                resource.archiveOffer(10L);
+
+        assertEquals(
+                Response.Status.OK.getStatusCode(),
+                response.getStatus()
+        );
+
+        assertEquals(
+                JobOffer.OfferStatus.ARCHIVED,
+                offer.getStatus()
+        );
+
+        verify(entityManager)
+                .flush();
+    }
+
+
+    @Test
+    void archiveMissingOfferShouldReturnNotFound()
+            throws Exception {
+
+        EntityManager entityManager =
+                mock(EntityManager.class);
+
+        when(
+                entityManager.find(
+                        JobOffer.class,
+                        999L
+               )
+        ).thenReturn(null);
+
+        JobOfferResource resource =
+                createResource(entityManager);
+
+        Response response =
+                resource.archiveOffer(999L);
+
+        assertEquals(
+                Response.Status.NOT_FOUND.getStatusCode(),
+                response.getStatus()
+        );
+
+        verify(
+                entityManager,
+                never()
+        ).flush();
     }
 }

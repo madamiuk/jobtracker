@@ -8,6 +8,7 @@ import jakarta.ws.rs.Consumes;
 import jakarta.ws.rs.GET;
 import jakarta.ws.rs.POST;
 import jakarta.ws.rs.Path;
+import jakarta.ws.rs.PathParam;
 import jakarta.ws.rs.Produces;
 import jakarta.ws.rs.core.MediaType;
 import jakarta.ws.rs.core.Response;
@@ -74,31 +75,64 @@ public class JobOfferResource {
                 && isValidEmploymentType(request.employmentType());
     }
 
+    private JobOfferResponse toResponse(JobOffer offer) {
+        return new JobOfferResponse(
+                offer.getId(),
+                offer.getCompany().getName(),
+                offer.getPositionTitle(),
+                offer.getLocation(),
+                offer.getSalaryMin(),
+                offer.getSalaryMax(),
+                offer.getSalaryCurrency(),
+                offer.getSalaryPeriod()
+        );
+    }
+
     @GET
     public List<JobOfferResponse> listOffers() {
-        List<JobOffer> offers = entityManager
+        return entityManager
                 .createQuery(
                         """
                         SELECT jo
                         FROM JobOffer jo
                         JOIN FETCH jo.company
+                        WHERE jo.status IS NULL
+                           OR jo.status = :activeStatus
                         ORDER BY jo.id
                         """,
                         JobOffer.class
                 )
-                .getResultList();
+                .setParameter(
+                        "activeStatus",
+                        JobOffer.OfferStatus.ACTIVE
+                )
+                .getResultList()
+                .stream()
+                .map(this::toResponse)
+                .toList();
+    }
 
-        return offers.stream()
-                .map(offer -> new JobOfferResponse(
-                        offer.getId(),
-                        offer.getCompany().getName(),
-                        offer.getPositionTitle(),
-                        offer.getLocation(),
-                        offer.getSalaryMin(),
-                        offer.getSalaryMax(),
-                        offer.getSalaryCurrency(),
-                        offer.getSalaryPeriod()
-                ))
+    @GET
+    @Path("/archived")
+    public List<JobOfferResponse> listArchivedOffers() {
+        return entityManager
+                .createQuery(
+                        """
+                        SELECT jo
+                        FROM JobOffer jo
+                        JOIN FETCH jo.company
+                        WHERE jo.status = :archivedStatus
+                        ORDER BY jo.id
+                        """,
+                        JobOffer.class
+                )
+                .setParameter(
+                        "archivedStatus",
+                        JobOffer.OfferStatus.ARCHIVED
+                )
+                .getResultList()
+                .stream()
+                .map(this::toResponse)
                 .toList();
     }
 
@@ -148,25 +182,52 @@ public class JobOfferResource {
 
         if (request.employmentType() != null) {
             offer.setEmploymentType(
-                    JobOffer.EmploymentType.valueOf(request.employmentType())
+                    JobOffer.EmploymentType.valueOf(
+                            request.employmentType()
+                    )
             );
         }
+
+        offer.setStatus(
+                JobOffer.OfferStatus.ACTIVE
+        );
 
         entityManager.persist(offer);
         entityManager.flush();
 
         return Response
                 .status(Response.Status.CREATED)
-                .entity(new JobOfferResponse(
-                        offer.getId(),
-                        company.getName(),
-                        offer.getPositionTitle(),
-                        offer.getLocation(),
-                        offer.getSalaryMin(),
-                        offer.getSalaryMax(),
-                        offer.getSalaryCurrency(),
-                        offer.getSalaryPeriod()
-                ))
+                .entity(toResponse(offer))
+                .build();
+    }
+
+    @POST
+    @Path("/{offerId}/archive")
+    @Transactional
+    public Response archiveOffer(
+            @PathParam("offerId") Long offerId
+    ) {
+
+        JobOffer offer = entityManager.find(
+                JobOffer.class,
+                offerId
+        );
+
+        if (offer == null) {
+            return Response
+                    .status(Response.Status.NOT_FOUND)
+                    .entity("Job offer not found.")
+                    .build();
+        }
+
+        offer.setStatus(
+                JobOffer.OfferStatus.ARCHIVED
+        );
+
+        entityManager.flush();
+
+        return Response
+                .ok(toResponse(offer))
                 .build();
     }
 }

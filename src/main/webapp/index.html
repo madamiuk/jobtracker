@@ -275,12 +275,13 @@
                     <th>Stanowisko</th>
                     <th>Lokalizacja</th>
                     <th>Wynagrodzenie</th>
+                    <th>Akcja</th>
                 </tr>
                 </thead>
 
                 <tbody id="offersTableBody">
                 <tr>
-                    <td colspan="5">Ładowanie danych...</td>
+                    <td colspan="6">Ładowanie danych...</td>
                 </tr>
                 </tbody>
             </table>
@@ -288,6 +289,36 @@
         </div>
     </section>
 
+    <section class="panel">
+
+        <div class="section-header">
+            <h2>Oferty archiwalne</h2>
+            <span id="archivedOfferCount">0 ofert</span>
+        </div>
+
+        <div class="table-wrapper">
+
+            <table>
+                <thead>
+                <tr>
+                    <th>ID</th>
+                    <th>Firma</th>
+                    <th>Stanowisko</th>
+                    <th>Lokalizacja</th>
+                    <th>Wynagrodzenie</th>
+                </tr>
+                </thead>
+
+                <tbody id="archivedOffersTableBody">
+                <tr>
+                    <td colspan="5">Ładowanie danych...</td>
+                </tr>
+                </tbody>
+            </table>
+
+        </div>
+
+    </section>
 
     <section class="panel">
 
@@ -295,6 +326,10 @@
             <h2>Aplikacje</h2>
             <span id="applicationCount">0 aplikacji</span>
         </div>
+
+        <p class="hint">
+            Kliknij wiersz aplikacji, aby zobaczyć szczegóły procesu rekrutacyjnego.
+        </p>
 
         <div class="table-wrapper">
 
@@ -321,6 +356,127 @@
             </table>
 
         </div>
+    </section>
+
+    <section id="applicationDetailsPanel" class="panel hidden">
+
+        <div class="section-header">
+
+            <div>
+                <h2>Szczegóły aplikacji</h2>
+
+                <p id="applicationDetailsTitle" class="details-title"></p>
+            </div>
+
+            <button id="closeDetailsButton" type="button" class="secondary-button">
+                Zamknij
+            </button>
+
+        </div>
+
+
+        <div id="applicationSummary" class="summary-grid"></div>
+
+        <section class="status-update-card">
+
+    <h3>Zmień status aplikacji</h3>
+
+    <form id="statusUpdateForm">
+
+        <div class="form-grid">
+
+            <label>
+                Nowy status
+                <select id="statusUpdateValue" required>
+                    <option value="PLANNED">Planowana</option>
+                    <option value="APPLIED">Wysłana</option>
+                    <option value="HR_SCREENING">HR screening</option>
+                    <option value="HR_INTERVIEW">Rozmowa HR</option>
+                    <option value="TECH_INTERVIEW">Rozmowa techniczna</option>
+                    <option value="TASK">Zadanie</option>
+                    <option value="MANAGER_INTERVIEW">Rozmowa z managerem</option>
+                    <option value="FINAL_INTERVIEW">Final interview</option>
+                    <option value="WAITING">Oczekiwanie</option>
+                    <option value="OFFER">Oferta</option>
+                    <option value="REJECTED">Odrzucona</option>
+                    <option value="WITHDRAWN">Wycofana</option>
+                    <option value="HIRED">Zatrudnienie</option>
+                </select>
+            </label>
+
+            <label>
+                Data zmiany
+                <input
+                    id="statusChangedAt"
+                    type="datetime-local"
+                    required
+                >
+            </label>
+
+            <label class="status-comment-field">
+                Komentarz
+                <textarea
+                    id="statusComment"
+                    rows="3"
+                    placeholder="Np. Zaproszenie na rozmowę techniczną"
+                ></textarea>
+            </label>
+
+        </div>
+
+        <div class="form-actions">
+
+            <button type="submit">
+                Zapisz zmianę statusu
+            </button>
+
+            <span id="statusUpdateMessage"></span>
+
+        </div>
+
+    </form>
+
+</section>
+
+        <div class="details-grid">
+
+            <section class="detail-card">
+                <h3>Historia statusów</h3>
+                <div id="historyDetails">Ładowanie...</div>
+            </section>
+
+            <section class="detail-card">
+                <h3>Rozmowy</h3>
+                <div id="interviewDetails">Ładowanie...</div>
+            </section>
+
+            <section class="detail-card">
+                <h3>Rekruterzy</h3>
+                <div id="recruiterDetails">Ładowanie...</div>
+            </section>
+
+            <section class="detail-card">
+                <h3>Kontakty</h3>
+                <div id="contactDetails">Ładowanie...</div>
+            </section>
+
+            <section class="detail-card">
+                <h3>Notatki</h3>
+                <div id="noteDetails">Ładowanie...</div>
+            </section>
+
+            <section class="detail-card">
+                <h3>Dokumenty</h3>
+                <div id="documentDetails">Ładowanie...</div>
+            </section>
+
+            <section class="detail-card">
+                <h3>Propozycje wynagrodzenia</h3>
+                <div id="salaryDetails">Ładowanie...</div>
+            </section>
+
+        </div>
+
     </section>
 
 </main>

@@ -12,6 +12,9 @@ import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.Table;
 
+import org.hibernate.annotations.JdbcTypeCode;
+import org.hibernate.type.SqlTypes;
+
 import java.time.OffsetDateTime;
 
 @Entity
@@ -27,6 +30,7 @@ public class ApplicationStatusHistory {
     private JobApplication application;
 
     @Enumerated(EnumType.STRING)
+    @JdbcTypeCode(SqlTypes.NAMED_ENUM)
     @Column(nullable = false)
     private JobApplication.ApplicationStatus status;
 
@@ -54,5 +58,21 @@ public class ApplicationStatusHistory {
 
     public String getComment() {
         return comment;
+    }
+
+    public void setApplication(JobApplication application) {
+        this.application = application;
+    }
+
+    public void setStatus(JobApplication.ApplicationStatus status) {
+        this.status = status;
+    }
+
+    public void setChangedAt(OffsetDateTime changedAt) {
+        this.changedAt = changedAt;
+    }
+
+    public void setComment(String comment) {
+        this.comment = comment;
     }
 }

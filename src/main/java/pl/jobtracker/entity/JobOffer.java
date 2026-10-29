@@ -2,6 +2,8 @@ package pl.jobtracker.entity;
 
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
+import jakarta.persistence.EnumType;
+import jakarta.persistence.Enumerated;
 import jakarta.persistence.FetchType;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
@@ -10,8 +12,6 @@ import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.Table;
 
-import jakarta.persistence.EnumType;
-import jakarta.persistence.Enumerated;
 import org.hibernate.annotations.JdbcTypeCode;
 import org.hibernate.type.SqlTypes;
 
@@ -46,6 +46,11 @@ public class JobOffer {
         OTHER
     }
 
+    public enum OfferStatus {
+        ACTIVE,
+        ARCHIVED
+    }
+
     @Enumerated(EnumType.STRING)
     @JdbcTypeCode(SqlTypes.NAMED_ENUM)
     @Column(name = "source_type", nullable = false)
@@ -60,6 +65,10 @@ public class JobOffer {
     @JdbcTypeCode(SqlTypes.NAMED_ENUM)
     @Column(name = "employment_type")
     private EmploymentType employmentType;
+
+    @Enumerated(EnumType.STRING)
+    @Column(name = "status", length = 50)
+    private OfferStatus status;
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -119,6 +128,22 @@ public class JobOffer {
         return salaryPeriod;
     }
 
+    public SourceType getSourceType() {
+        return sourceType;
+    }
+
+    public WorkMode getWorkMode() {
+        return workMode;
+    }
+
+    public EmploymentType getEmploymentType() {
+        return employmentType;
+    }
+
+    public OfferStatus getStatus() {
+        return status;
+    }
+
     public void setCompany(Company company) {
         this.company = company;
     }
@@ -159,16 +184,7 @@ public class JobOffer {
         this.employmentType = employmentType;
     }
 
-    public SourceType getSourceType() {
-        return sourceType;
+    public void setStatus(OfferStatus status) {
+        this.status = status;
     }
-
-    public WorkMode getWorkMode() {
-        return workMode;
-    }
-
-    public EmploymentType getEmploymentType() {
-        return employmentType;
-    }
-
 }
