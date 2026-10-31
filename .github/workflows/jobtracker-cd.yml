@@ -1,0 +1,68 @@
+name: JobTracker CD
+
+on:
+  workflow_run:
+    workflows:
+      - JobTracker CI
+    types:
+      - completed
+    branches:
+      - main
+
+  workflow_dispatch:
+    inputs:
+      ci_run_id:
+        description: "JobTracker CI run ID containing the WAR artifact"
+        required: true
+        type: string
+
+permissions:
+  contents: read
+  actions: read
+
+jobs:
+  deploy:
+    name: Deploy JobTracker to OCI
+    environment: dev
+
+    if: >
+      github.event_name == 'workflow_dispatch' ||
+      github.event.workflow_run.conclusion == 'success'
+
+    runs-on: [self-hosted, macOS, ARM64]
+
+    steps:
+      - name: Checkout JobTracker repository
+        uses: actions/checkout@v7
+        with:
+          ref: ${{ github.event.workflow_run.head_sha || github.sha }}
+
+      - name: Configure Ansible environment
+        run: |
+          echo "/Users/ma/ansible/venv/bin" >> "$GITHUB_PATH"
+          echo "ANSIBLE_CONFIG=/Users/ma/ansible/ansible.cfg" >> "$GITHUB_ENV"
+
+      - name: Select CI run ID
+        id: ci
+        run: |
+          if [[ "${{ github.event_name }}" == "workflow_run" ]]; then
+            echo "run_id=${{ github.event.workflow_run.id }}" >> "$GITHUB_OUTPUT"
+          else
+            echo "run_id=${{ inputs.ci_run_id }}" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Show deployment source
+        run: |
+          echo "JobTracker CI run ID: ${{ steps.ci.outputs.run_id }}"
+
+      - name: Verify deployment wrapper
+        run: |
+          test -x /Users/ma/ansible/scripts/deploy-jobtracker-artifact.sh
+          bash -n /Users/ma/ansible/scripts/deploy-jobtracker-artifact.sh
+
+      - name: Deploy JobTracker and run E2E tests
+        env:
+          RUN_E2E: "true"
+        run: |
+          /Users/ma/ansible/scripts/deploy-jobtracker-artifact.sh \
+            "${{ steps.ci.outputs.run_id }}"
