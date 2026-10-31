@@ -2,30 +2,32 @@
 
 [![JobTracker CI](https://github.com/madamiuk/jobtracker/actions/workflows/jobtracker-ci.yml/badge.svg)](https://github.com/madamiuk/jobtracker/actions/workflows/jobtracker-ci.yml)
 
-JobTracker is a practical job application tracking system built with Java, Jakarta EE, WildFly and PostgreSQL.
+JobTracker is a practical job application tracking system built with **Java 21**, **Jakarta EE 11**, **WildFly** and **PostgreSQL 18**.
 
-The project is developed as the application layer of a larger Infrastructure as Code and DevOps laboratory combining:
+The project is developed as both:
 
-- Java 21
-- Jakarta EE 11
-- WildFly
-- PostgreSQL 18
+- a useful recruitment management application,
+- a realistic Java / Linux / DevOps laboratory.
+
+It integrates application development with:
+
 - Maven
+- GitHub Actions
 - Ansible
 - Terraform
 - Oracle Cloud Infrastructure
 - Nagios
-- GitHub Actions
-
-The goal is to build a real application for managing recruitment processes while simultaneously exercising realistic application delivery, infrastructure automation, CI/CD and monitoring workflows.
+- automated CI/CD
+- runtime verification
+- end-to-end database testing
 
 ---
 
 ## Current status
 
-JobTracker is now a working full-stack application deployed on Oracle Cloud Infrastructure.
+JobTracker is a working full-stack application deployed on Oracle Cloud Infrastructure.
 
-The current application provides:
+Current capabilities include:
 
 - Java 21 backend
 - Jakarta EE 11
@@ -37,9 +39,7 @@ The current application provides:
 - company management
 - job offer management
 - job application management
-- recruitment process tracking
 - application status history
-- recruitment details view
 - recruiters
 - interviews
 - contact history
@@ -51,66 +51,53 @@ The current application provides:
 - automated application tests
 - GitHub Actions CI
 - WAR artifact generation
+- automated cross-repository CD
 - Ansible deployment
 - deployment preflight validation
 - artifact checksum verification
 - automatic rollback
 - REST runtime verification
-- end-to-end database testing
-- Nagios monitoring infrastructure
+- full end-to-end database verification
+- Nagios monitoring
 
-The project is being developed incrementally toward a complete personal recruitment management system.
+The complete CI/CD path has been successfully validated from source commit through OCI deployment and PostgreSQL verification.
 
 ---
 
 ## Architecture
 
-The environment is split between three independent GitHub repositories:
+The laboratory is split across three independent GitHub repositories:
 
 ```text
-oci-terraform-lab
+madamiuk/jobtracker
+        |
+        | Java application
+        | Maven build
+        | automated tests
+        | GitHub Actions CI
+        | WAR artifact
+        v
+
+madamiuk/ansible-lab
+        |
+        | configuration management
+        | WildFly
+        | PostgreSQL
+        | Nagios
+        | application deployment
+        | runtime verification
+        | E2E tests
+        v
+
+madamiuk/oci-terraform-lab
         |
         | Terraform
+        | OCI networking
+        | OCI Compute
+        | OCI Monitoring
         v
+
 Oracle Cloud Infrastructure
-        |
-        +--> oci-ansible01
-        |       Oracle Linux 9
-        |       Java 21
-        |       WildFly
-        |       JobTracker
-        |
-        +--> oci-ansible02
-        |       Oracle Linux 9
-        |       Nagios
-        |
-        +--> oci-ansible03
-                Oracle Linux 9
-                PostgreSQL 18
-                jobtracker database
-
-
-ansible-lab
-        |
-        +--> OS configuration
-        +--> WildFly
-        +--> PostgreSQL
-        +--> Nagios
-        +--> application deployment
-        +--> runtime verification
-        +--> end-to-end tests
-
-
-jobtracker
-        |
-        +--> Java application
-        +--> REST API
-        +--> persistence model
-        +--> web interface
-        +--> application tests
-        +--> Maven build
-        +--> GitHub Actions
-        +--> WAR artifact
 ```
 
 Responsibilities are intentionally separated:
@@ -123,9 +110,44 @@ JobTracker -> application code and business logic
 
 ---
 
-## Application architecture
+## OCI environment
 
-The JobTracker application follows a simple three-layer model:
+Current application topology:
+
+```text
+Oracle Cloud Infrastructure
+│
+├── oci-ansible01
+│   ├── Oracle Linux 9
+│   ├── Java 21
+│   ├── WildFly
+│   └── JobTracker
+│
+├── oci-ansible02
+│   ├── Oracle Linux 9
+│   └── Nagios
+│
+└── oci-ansible03
+    ├── Oracle Linux 9
+    ├── PostgreSQL 18
+    └── jobtracker database
+```
+
+Private addressing:
+
+```text
+oci-ansible01    10.10.1.37
+oci-ansible02    10.10.1.176
+oci-ansible03    10.10.1.26
+```
+
+Application-to-database communication uses the private OCI network.
+
+PostgreSQL runs on the dedicated database host `oci-ansible03`. It does not run locally on the WildFly application server.
+
+---
+
+## Application architecture
 
 ```text
 Web browser
@@ -154,13 +176,26 @@ jobtracker.war
 
 and is served by WildFly together with the REST API.
 
-This avoids the need for a separate frontend runtime during the current stage of development.
+Frontend source files are stored under:
+
+```text
+src/main/webapp/
+```
+
+including:
+
+```text
+src/main/webapp/
+├── index.html
+├── app.js
+└── styles.css
+```
 
 ---
 
-## Main recruitment model
+## Recruitment model
 
-The central relationship is:
+The primary domain relationship is:
 
 ```text
 Company
@@ -172,31 +207,23 @@ Job Offer
 Job Application
 ```
 
-Each job application may then contain additional recruitment information:
+A job application may contain:
 
 ```text
 Job Application
     |
     +--> Status history
-    |
     +--> Recruiters
-    |
     +--> Interviews
-    |
     +--> Contact events
-    |
     +--> Notes
-    |
     +--> Documents
-    |
     +--> Salary proposals
-    |
-    +--> Follow-up information
 ```
 
-The design intentionally separates the current state from historical events.
+The current application status and its history are deliberately separated.
 
-For example:
+Example:
 
 ```text
 APPLIED
@@ -211,27 +238,27 @@ HR_INTERVIEW
 TECH_INTERVIEW
 ```
 
-The current application status is stored in:
+Current state is stored in:
 
 ```text
 job_application.current_status
 ```
 
-while previous changes remain available through:
+Historical transitions are stored in:
 
 ```text
 application_status_history
 ```
 
-This allows the recruitment process to evolve without losing historical information.
+This preserves recruitment history while still allowing efficient access to the current state.
 
 ---
 
 ## Job offer lifecycle
 
-Job offers are not physically deleted.
+Job offers are archived instead of physically deleted.
 
-The current lifecycle is:
+Current lifecycle:
 
 ```text
 ACTIVE
@@ -240,66 +267,39 @@ ACTIVE
 ARCHIVED
 ```
 
-Active offers are available for new job applications.
-
 Archived offers:
 
-- remain stored in PostgreSQL
-- remain available for historical reference
-- no longer appear in the main new-application selector
-- remain associated with existing applications
+- remain stored in PostgreSQL,
+- remain associated with existing applications,
+- remain available for historical analysis,
+- are excluded from the normal new-application workflow.
 
-This preserves historical data and prevents broken relationships between job applications and their original job offers.
-
-Older database records where the offer status is `NULL` are currently treated as active for backward compatibility.
+This avoids broken historical relationships.
 
 ---
 
 ## Web interface
 
-The application includes a lightweight interactive frontend implemented with:
+The application frontend currently supports:
 
-```text
-HTML
-CSS
-JavaScript
-```
+- creating companies,
+- creating job offers,
+- creating job applications,
+- viewing active job offers,
+- archiving job offers,
+- viewing archived job offers,
+- viewing job applications,
+- opening application details,
+- viewing status history,
+- viewing recruiters,
+- viewing interviews,
+- viewing contact events,
+- viewing notes,
+- viewing documents,
+- viewing salary proposals,
+- refreshing data from the REST API.
 
-The frontend is stored under:
-
-```text
-src/main/webapp/
-```
-
-Current files include:
-
-```text
-src/main/webapp/
-├── index.html
-├── app.js
-└── styles.css
-```
-
-The interface currently supports:
-
-- creating companies
-- creating job offers
-- creating job applications
-- viewing active job offers
-- archiving job offers
-- viewing archived job offers
-- viewing job applications
-- opening application details
-- viewing application status history
-- viewing recruiters
-- viewing interviews
-- viewing contact events
-- viewing notes
-- viewing documents
-- viewing salary proposals
-- refreshing data directly from the REST API
-
-The application UI communicates directly with the JobTracker REST endpoints.
+The frontend communicates directly with the Jakarta REST endpoints.
 
 ---
 
@@ -317,8 +317,6 @@ The Jakarta REST application is exposed under:
 GET /api/health
 ```
 
----
-
 ### Companies
 
 ```text
@@ -326,111 +324,32 @@ GET  /api/companies
 POST /api/companies
 ```
 
----
-
 ### Job offers
 
-Active offers:
-
 ```text
-GET /api/offers
-```
-
-Archived offers:
-
-```text
-GET /api/offers/archived
-```
-
-Create offer:
-
-```text
+GET  /api/offers
+GET  /api/offers/archived
 POST /api/offers
-```
-
-Archive offer:
-
-```text
 POST /api/offers/{offerId}/archive
 ```
 
----
-
 ### Job applications
 
-List applications:
-
 ```text
-GET /api/applications
-```
-
-Create application:
-
-```text
+GET  /api/applications
 POST /api/applications
-```
-
-Change application status:
-
-```text
 POST /api/applications/{applicationId}/status
 ```
 
-A status change updates the current application state and creates a separate historical status entry.
-
----
-
-### Application status history
+### Application details
 
 ```text
 GET /api/applications/{applicationId}/history
-```
-
----
-
-### Contacts
-
-```text
 GET /api/applications/{applicationId}/contacts
-```
-
----
-
-### Interviews
-
-```text
 GET /api/applications/{applicationId}/interviews
-```
-
----
-
-### Recruiters
-
-```text
 GET /api/applications/{applicationId}/recruiters
-```
-
----
-
-### Documents
-
-```text
 GET /api/applications/{applicationId}/documents
-```
-
----
-
-### Salary proposals
-
-```text
 GET /api/applications/{applicationId}/salary-proposals
-```
-
----
-
-### Notes
-
-```text
 GET /api/applications/{applicationId}/notes
 ```
 
@@ -438,13 +357,13 @@ GET /api/applications/{applicationId}/notes
 
 ## Database
 
-The PostgreSQL schema is maintained in:
+The PostgreSQL schema is maintained explicitly in:
 
 ```text
 database/schema.sql
 ```
 
-The database contains, among others:
+Important tables include:
 
 ```text
 company
@@ -462,38 +381,16 @@ salary_proposal
 note
 ```
 
-The application uses the JPA persistence unit:
+The application uses:
 
 ```text
-JobTrackerPU
+Persistence unit: JobTrackerPU
+Datasource:       java:/jdbc/JobTrackerDS
 ```
 
-and the WildFly JTA datasource:
+Hibernate automatic schema generation is intentionally disabled.
 
-```text
-java:/jdbc/JobTrackerDS
-```
-
-Hibernate schema generation is intentionally disabled.
-
-The database schema is managed explicitly instead of allowing the application to modify production database structures automatically.
-
----
-
-## Runtime database
-
-The PostgreSQL database runs on a dedicated OCI host:
-
-```text
-Host:     oci-ansible03
-Database: jobtracker
-User:     jobtracker
-Version:  PostgreSQL 18
-```
-
-PostgreSQL does not run on the WildFly application server.
-
-WildFly connects to PostgreSQL through the OCI private network.
+Database structure is managed explicitly instead of allowing the application to modify production schemas automatically.
 
 ---
 
@@ -515,27 +412,27 @@ Datasource: JobTrackerDS
 JNDI:       java:/jdbc/JobTrackerDS
 ```
 
-The application is available internally through:
+Application context:
 
 ```text
 /jobtracker/
 ```
 
-and the REST API through:
+REST context:
 
 ```text
 /jobtracker/api/
 ```
 
-During development the web interface can be accessed safely through an SSH tunnel without exposing WildFly port `8080` publicly.
+WildFly port `8080` is not intentionally exposed publicly.
 
-Example:
+Development access can use an SSH tunnel:
 
 ```bash
 ssh -L 8080:10.10.1.37:8080 opc@<PUBLIC_IP>
 ```
 
-Then:
+Then open:
 
 ```text
 http://localhost:8080/jobtracker/
@@ -545,19 +442,17 @@ http://localhost:8080/jobtracker/
 
 ## Build
 
-Build the application locally with:
+Build locally with:
 
 ```bash
 mvn clean verify
 ```
 
-The resulting WAR is:
+The generated artifact is:
 
 ```text
 target/jobtracker.war
 ```
-
-The build includes compilation, automated tests and WAR packaging.
 
 The WAR contains both:
 
@@ -571,49 +466,24 @@ Web frontend
 
 ## Automated tests
 
-JobTracker currently contains:
+The current test suite contains:
 
 ```text
 47 automated tests
 ```
 
-The test suite covers several levels.
+Coverage includes:
 
-### Domain model tests
+- domain model validation,
+- persistence configuration,
+- REST contracts,
+- request validation,
+- endpoint behavior,
+- job offer lifecycle,
+- application status history,
+- JPA persistence interactions.
 
-Validation of important domain enums and expected model values.
-
-### Persistence contract tests
-
-Validation of:
-
-```text
-JobTrackerPU
-JTA persistence
-java:/jdbc/JobTrackerDS
-disabled automatic schema generation
-```
-
-### REST contract tests
-
-Validation of REST application paths and important resource endpoints.
-
-### Request validation tests
-
-Validation of incorrect and valid input for:
-
-```text
-companies
-job offers
-job applications
-application status changes
-```
-
-### REST behavior tests
-
-Mockito-based tests validate endpoint behavior without requiring WildFly.
-
-Examples include:
+Tests validate scenarios such as:
 
 ```text
 HTTP 400 for invalid requests
@@ -628,15 +498,25 @@ application status history creation
 
 ---
 
-## CI
+# CI/CD
 
-GitHub Actions runs the JobTracker CI pipeline on pushes and pull requests to:
+JobTracker uses a fully automated cross-repository CI/CD pipeline.
+
+## Continuous Integration
+
+Workflow:
+
+```text
+.github/workflows/jobtracker-ci.yml
+```
+
+The CI workflow runs automatically for pushes and pull requests targeting:
 
 ```text
 main
 ```
 
-The current CI flow is:
+Pipeline:
 
 ```text
 checkout
@@ -651,7 +531,7 @@ Maven
 mvn clean verify
    |
    v
-47 application tests
+47 automated tests
    |
    v
 WAR validation
@@ -663,64 +543,144 @@ jobtracker.war
 GitHub Actions artifact
 ```
 
-The generated artifact is published as:
+The artifact is published as:
 
 ```text
 jobtracker-war
 ```
 
-The artifact is retained temporarily and can be consumed by the Ansible deployment workflow.
+The workflow also validates that the WAR contains critical application components including:
+
+```text
+WEB-INF/classes/pl/jobtracker/rest/HealthResource.class
+WEB-INF/classes/META-INF/persistence.xml
+```
 
 ---
 
-## Artifact-based deployment
+## CD trigger
 
-The JobTracker repository does not deploy itself directly to OCI.
-
-The deployment is managed from the separate:
+Workflow:
 
 ```text
-ansible-lab
+.github/workflows/jobtracker-cd-trigger.yml
 ```
 
-repository.
-
-The artifact-based flow is:
+After a successful `JobTracker CI` run, the trigger workflow sends a:
 
 ```text
-Git push
-   |
-   v
+repository_dispatch
+```
+
+event to:
+
+```text
+madamiuk/ansible-lab
+```
+
+with event type:
+
+```text
+jobtracker-ci-success
+```
+
+The payload contains the exact JobTracker CI run ID.
+
+This guarantees that deployment consumes the WAR artifact created by the CI run that triggered the deployment.
+
+---
+
+## Complete CI/CD flow
+
+```text
+git push to main
+       |
+       v
 JobTracker CI
-   |
-   v
+       |
+       v
 mvn clean verify
-   |
-   v
-jobtracker.war
-   |
-   v
-GitHub Actions artifact
-   |
-   v
-Ansible deployment wrapper
-   |
-   v
-WildFly
-   |
-   v
-Runtime verification
+       |
+       v
+47 automated tests
+       |
+       v
+WAR validation
+       |
+       v
+jobtracker-war artifact
+       |
+       v
+Trigger JobTracker CD
+       |
+       v
+repository_dispatch
+       |
+       v
+madamiuk/ansible-lab
+       |
+       v
+JobTracker CD
+       |
+       v
+self-hosted macOS ARM64 runner
+       |
+       v
+download exact CI artifact
+       |
+       v
+Ansible deployment
+       |
+       v
+oci-ansible01 / WildFly
+       |
+       v
+health + REST smoke tests
+       |
+       v
+jobtracker_e2e.yml
+       |
+       v
+oci-ansible03 / PostgreSQL
+       |
+       v
+GREEN
 ```
 
-This keeps application build responsibilities separate from infrastructure deployment responsibilities.
+The complete automated path has been successfully validated end-to-end.
+
+---
+
+## Deployment ownership
+
+The JobTracker repository does not perform infrastructure deployment directly.
+
+Responsibilities are separated:
+
+```text
+jobtracker
+    |
+    +--> build
+    +--> tests
+    +--> WAR artifact
+    +--> CD trigger
+
+ansible-lab
+    |
+    +--> artifact download
+    +--> deployment
+    +--> WildFly verification
+    +--> REST smoke tests
+    +--> E2E verification
+```
+
+This keeps application code independent from infrastructure implementation details.
 
 ---
 
 ## Deployment verification
 
-The Ansible deployment process performs several safety checks.
-
-Before deployment:
+Before accepting a deployment, the Ansible pipeline verifies:
 
 ```text
 WAR exists
@@ -732,18 +692,24 @@ WildFly datasource exists
 database connection works
 ```
 
-During deployment:
+Artifact integrity is checked using SHA-256:
 
 ```text
-local SHA-256
-      |
-      v
-WAR transfer
-      |
-      v
-remote SHA-256
-      |
-      v
+local WAR
+    |
+    v
+SHA-256
+    |
+    v
+transfer
+    |
+    v
+remote WAR
+    |
+    v
+SHA-256
+    |
+    v
 checksum comparison
 ```
 
@@ -757,13 +723,13 @@ application/json validation
 JSON contract validation
 ```
 
-The deployment also supports automatic rollback if WildFly reports a failed deployment.
+Automatic rollback is available when WildFly reports deployment failure.
 
 ---
 
 ## Runtime smoke tests
 
-The deployment playbook validates:
+Deployment validation includes:
 
 ```text
 GET /api/health
@@ -772,24 +738,30 @@ GET /api/offers
 GET /api/applications
 ```
 
-Runtime checks validate:
+Checks include:
 
 ```text
 HTTP 200
 application/json
-valid JSON arrays
-expected response fields
+valid JSON
+expected response structure
 ```
 
-This ensures that the deployment is not considered successful merely because WildFly accepted the WAR.
+A deployment is therefore not considered successful merely because WildFly accepted the WAR.
 
-The application API must also respond with the expected contract.
+The application itself must also respond correctly.
 
 ---
 
-## End-to-end tests
+## End-to-end verification
 
-The Ansible laboratory includes a full JobTracker end-to-end test:
+The Ansible laboratory contains:
+
+```text
+jobtracker_e2e.yml
+```
+
+It creates a real recruitment data chain:
 
 ```text
 Company
@@ -801,125 +773,46 @@ Job Offer
 Job Application
 ```
 
-The test performs real REST requests against WildFly:
+The flow performs:
 
 ```text
-POST /companies
-POST /offers
-POST /applications
-```
-
-The resulting records are then:
-
-```text
-verified through REST
-        +
-verified directly in PostgreSQL
-```
-
-Finally the temporary test data is removed.
-
-The E2E workflow therefore verifies:
-
-```text
-Browser/API model
+POST Company
       |
       v
+POST Job Offer
+      |
+      v
+POST Job Application
+      |
+      v
+REST verification
+      |
+      v
+direct PostgreSQL verification
+      |
+      v
+cleanup
+```
+
+This verifies the complete path:
+
+```text
 REST
-      |
-      v
+  |
+  v
+Jakarta EE
+  |
+  v
 JPA / Hibernate
-      |
-      v
-WildFly datasource
-      |
-      v
+  |
+  v
+WildFly JTA datasource
+  |
+  v
 PostgreSQL
 ```
 
-without permanently polluting the application database.
-
----
-
-## Infrastructure repositories
-
-JobTracker is part of a three-repository laboratory.
-
-### Application
-
-```text
-madamiuk/jobtracker
-```
-
-Responsibilities:
-
-- Java source code
-- REST API
-- persistence model
-- frontend
-- automated tests
-- Maven build
-- application CI
-- WAR artifact
-
-### Configuration and deployment
-
-```text
-madamiuk/ansible-lab
-```
-
-Responsibilities:
-
-- operating system configuration
-- WildFly
-- PostgreSQL
-- Nagios
-- application deployment
-- secrets
-- runtime tests
-- end-to-end tests
-
-### Infrastructure
-
-```text
-madamiuk/oci-terraform-lab
-```
-
-Responsibilities:
-
-- OCI networking
-- Compute instances
-- infrastructure lifecycle
-- Terraform state
-- Terraform outputs
-- infrastructure CI
-
----
-
-## OCI environment
-
-Current laboratory topology:
-
-```text
-Oracle Cloud Infrastructure
-│
-├── oci-ansible01
-│   ├── Oracle Linux 9
-│   ├── Java 21
-│   ├── WildFly
-│   └── JobTracker
-│
-├── oci-ansible02
-│   ├── Oracle Linux 9
-│   └── Nagios
-│
-└── oci-ansible03
-    ├── Oracle Linux 9
-    ├── PostgreSQL 18
-    └── jobtracker database
-```
-
-Application-to-database communication uses private OCI addressing.
+Temporary E2E data is removed after verification.
 
 ---
 
@@ -931,7 +824,7 @@ Nagios runs on:
 oci-ansible02
 ```
 
-The monitoring environment covers infrastructure and application components including:
+Monitoring includes:
 
 ```text
 PING
@@ -939,52 +832,57 @@ SSH
 system load
 memory
 filesystem
-WildFly
-PostgreSQL
+process count
+WildFly HTTP
+PostgreSQL process
+PostgreSQL connectivity
+PostgreSQL connections
+PostgreSQL database size
 JobTracker
 ```
 
-Monitoring configuration is maintained by the Ansible laboratory.
+Monitoring configuration is maintained in the Ansible repository.
+
+OCI Monitoring provides an additional infrastructure monitoring layer.
 
 ---
 
 ## Security model
 
-Application and infrastructure secrets are not stored in the JobTracker source repository.
+Application and infrastructure secrets are not stored in this repository.
 
 Infrastructure secrets are managed using:
 
 ```text
 Ansible Vault
+GitHub Actions Secrets
+Terraform environment variables
 ```
 
 Examples include:
 
 ```text
 PostgreSQL credentials
-application database password
-privilege escalation credentials
+application database passwords
+CI/CD tokens
+OCI credentials
 ```
 
-Terraform credentials and OCI private keys are also maintained outside Git.
-
-WildFly port `8080` is not intentionally exposed publicly for normal application access during the current development stage.
+Private keys, Terraform state files and credentials are never intended to be committed to Git.
 
 ---
 
 ## Repository structure
 
-Important project areas:
-
 ```text
 .
 ├── .github/
 │   └── workflows/
-│       └── jobtracker-ci.yml
+│       ├── jobtracker-ci.yml
+│       └── jobtracker-cd-trigger.yml
 │
 ├── database/
-│   ├── schema.sql
-│   └── test data
+│   └── schema.sql
 │
 ├── docs/
 │
@@ -1017,13 +915,11 @@ Important project areas:
 
 ## Development principles
 
-Several design principles are intentionally followed throughout the project.
-
 ### Preserve history
 
-Important recruitment events should not disappear when current information changes.
+Important recruitment events remain available after the current state changes.
 
-Examples:
+Examples include:
 
 ```text
 application status changes
@@ -1034,93 +930,55 @@ documents
 salary proposals
 ```
 
-Historical data is treated as useful business information.
-
 ### Archive instead of delete
 
-Job offers are archived rather than removed.
+Job offers are archived rather than physically removed.
 
-This preserves:
+### Separate current state from history
 
-```text
-historical recruitment context
-database relationships
-application references
-future reporting possibilities
-```
+Current application status and historical transitions have separate representations.
 
-### Separate current state from event history
+### Separate infrastructure from application logic
 
-Examples:
-
-```text
-job_application.current_status
-```
-
-represents the current state, while:
-
-```text
-application_status_history
-```
-
-represents how that state evolved.
-
-### Infrastructure separation
-
-Application code does not manage:
+JobTracker does not manage:
 
 ```text
 OCI infrastructure
-WildFly configuration
+WildFly installation
 PostgreSQL installation
 Nagios configuration
 ```
 
-These responsibilities belong to Terraform and Ansible.
+Those responsibilities belong to Terraform and Ansible.
 
 ---
 
 ## Current development direction
 
-The next development stage focuses on turning the application details view into the main recruitment workspace.
+The next application development stage focuses on improving the recruitment workspace.
 
 Planned areas include:
 
-- adding recruitment notes from the web interface
-- adding interviews from the web interface
-- recruiter management
-- contact event management
-- document registration
-- salary proposal management
-- further status workflow improvements
-- application lifecycle modelling
-- separation of active and completed recruitment processes
-- reporting
-- recruitment statistics
-- dashboard views
-- filtering and search
+- adding notes from the web interface,
+- adding interviews,
+- recruiter management,
+- contact event management,
+- document registration,
+- salary proposal management,
+- application lifecycle modelling,
+- active versus completed recruitment processes,
+- reporting,
+- recruitment statistics,
+- dashboard views,
+- filtering and search.
 
-The detailed application lifecycle is intentionally being designed before additional filtering and automatic archival rules are introduced.
-
-This avoids coupling unrelated concepts such as:
-
-```text
-job offer lifecycle
-```
-
-and:
-
-```text
-job application lifecycle
-```
-
-before real recruitment scenarios are fully modelled.
+Application lifecycle rules are intentionally being designed before additional automatic archival behavior is introduced.
 
 ---
 
-## Long-term direction
+## Project goal
 
-The long-term goal is a complete personal recruitment management system with a reproducible delivery pipeline:
+The long-term goal is a complete personal recruitment management system with a reproducible delivery platform:
 
 ```text
 Developer
@@ -1128,16 +986,17 @@ Developer
    v
 GitHub
    |
-   +-------------------------------+
-   |                               |
-   v                               v
-JobTracker CI                  Infrastructure CI
-   |                               |
-   v                               v
-47+ tests                    Terraform / Ansible
+   v
+JobTracker CI
+   |
+   v
+automated tests
    |
    v
 WAR artifact
+   |
+   v
+cross-repository CD trigger
    |
    v
 Ansible deployment
@@ -1149,23 +1008,13 @@ WildFly
 PostgreSQL
    |
    v
-Runtime verification
+runtime verification
    |
    v
-E2E testing
+E2E verification
    |
    v
-Monitoring
+Nagios / OCI Monitoring
 ```
 
-The project is intentionally developed as both:
-
-```text
-a useful recruitment application
-```
-
-and:
-
-```text
-a realistic Java / Linux / DevOps laboratory
-```
+The project is intentionally developed as both a practical application and a realistic Java / Linux / DevOps laboratory.
