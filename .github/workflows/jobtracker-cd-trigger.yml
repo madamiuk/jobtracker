@@ -1,0 +1,30 @@
+name: Trigger JobTracker CD
+
+on:
+  workflow_run:
+    workflows:
+      - JobTracker CI
+    types:
+      - completed
+    branches:
+      - main
+
+jobs:
+  trigger-cd:
+    name: Trigger deployment in ansible-lab
+
+    if: github.event.workflow_run.conclusion == 'success'
+
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Trigger JobTracker CD
+        env:
+          GH_TOKEN: ${{ secrets.JOBTRACKER_CD_TOKEN }}
+          CI_RUN_ID: ${{ github.event.workflow_run.id }}
+        run: |
+          gh api \
+            --method POST \
+            repos/madamiuk/ansible-lab/dispatches \
+            -f event_type=jobtracker-ci-success \
+            -F client_payload[ci_run_id]="$CI_RUN_ID"
